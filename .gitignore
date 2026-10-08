@@ -1,0 +1,37 @@
+@"
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# VS Code
+.vscode/
+
+# Large datasets
+data/eye_face/
+data/skin_coat/
+data/gait/
+data/posture_activity/
+data/body_condition/
+data/symptoms/
+data/injury_triage/
+
+# Model checkpoints / large generated files
+*.pth
+*.pt
+*.onnx
+*.safetensors
+
+# Generated outputs
+outputs/*
+!outputs/.gitkeep
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+"@ | Set-Content .gitignore
