@@ -1,0 +1,33 @@
+PET HEALTH AI - VLM EXPLANATION
+======================================================================
+
+Image: C:\Users\lingeshwaran\projects\PEP-CV-Project\pet-gait-cv\data\eye_face\combined\test\Cherry_Eye\dog_cherry_eye-16-_jpg.rf.04489f7617abf4e87783c09bdaac4dd6_eye0.jpg
+Modality: eye
+Specialist model: MCFA-Net V2
+Router confidence: 97.83%
+Prediction: Cherry_Eye
+Prediction confidence: 98.81%
+
+**Observation:**
+The image shows a close-up of an animal's eye, specifically focusing on the eyelid area. The eyelid appears to be slightly swollen, with a noticeable reddening around the margin of the eyelid.
+
+**Anatomical Region:**
+The anatomical region is the eyelid of the animal.
+
+**Visible Features:**
+- Swelling
+- Redness
+
+**LayerCAM Consistency:**
+The LayerCAM visualization highlights the same region where the swelling and redness are visually apparent in the original image. Therefore, the highlighted region appears broadly relevant to the visible abnormality.
+
+**Model Consistency:**
+The image is broadly consistent with the classifier prediction, as the LayerCAM visualization confirms the presence of the same areas detected by the MCFA-Net V2 model.
+
+**Limitations:**
+- The image quality may affect the accuracy of the LayerCAM visualization.
+- The viewpoint might limit the ability to see all aspects of the eyelid.
+- Occlusion could potentially hide other abnormalities not visible in this specific view.
+- The LayerCAM visualization is not a definitive ground-truth lesion annotation but rather an indication of areas of interest based on the classifier's predictions.
+
+DISCLAIMER: This is an AI screening/explanation result and is not a veterinary diagnosis.

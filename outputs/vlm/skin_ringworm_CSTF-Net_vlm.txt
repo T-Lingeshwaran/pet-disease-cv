@@ -1,0 +1,32 @@
+PET HEALTH AI - VLM EXPLANATION
+======================================================================
+
+Image: C:\Users\lingeshwaran\projects\PEP-CV-Project\pet-gait-cv\data\skin_coat\combined_clean\test\ringworm\5A4BF21E-2505-406C-9A43-30E236CE08FE_jpeg_jpg.rf.3434fe26ced72dba85c5e212f1c7d100.jpg
+Modality: skin
+Specialist model: CSTF-Net
+Router confidence: 98.45%
+Prediction: ringworm
+Prediction confidence: 92.22%
+
+**Observation:**
+The image shows a close-up of a pet's skin, specifically focusing on an area where a pinkish, raised lesion is being palpated by a finger. The surrounding fur appears normal in texture and color.
+
+**Anatomical Region:**
+The lesion is located on the pet's skin, likely near the base of the tail or the hindquarters, based on the visible fur texture and positioning.
+
+**Visible Features:**
+- A pinkish, raised lesion.
+- Normal fur texture around the lesion.
+
+**LayerCAM Consistency:**
+The LayerCAM visualization highlights a specific area within the lesion, indicating that this region is particularly influential for the classifier prediction.
+
+**Model Consistency:**
+The image is broadly consistent with the classifier prediction, which identifies the lesion as potentially ringworm.
+
+**Limitations:**
+- The image quality is adequate but not high-resolution, which can affect the accuracy of the LayerCAM analysis.
+- The viewpoint is focused on the lesion, but other parts of the pet's body may be occluded, limiting the full context of the condition.
+- The LayerCAM visualization might not accurately represent the actual location of the lesion due to its focus on the most influential region.
+
+DISCLAIMER: This is an AI screening/explanation result and is not a veterinary diagnosis.

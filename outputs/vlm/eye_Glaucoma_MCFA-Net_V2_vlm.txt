@@ -1,0 +1,32 @@
+PET HEALTH AI - VLM EXPLANATION
+======================================================================
+
+Image: C:\Users\lingeshwaran\projects\PEP-CV-Project\pet-gait-cv\data\eye_face\combined\test\Glaucoma\dog_glaucoma-1-_png_jpg.rf.4bb38a63802bec7ad9c9ceab10d8afc0_eye1.jpg
+Modality: eye
+Specialist model: MCFA-Net V2
+Router confidence: 95.63%
+Prediction: Glaucoma
+Prediction confidence: 98.37%
+
+**Observation:**
+The image shows a close-up of a dog's eye, with the left side labeled "ORIGINAL" and the right side labeled "MCFA-Net V2 LayerCAM."
+
+**Anatomical Region:**
+The anatomical region is the eye of a dog.
+
+**Visible Features:**
+- The original image shows a clear, healthy-looking eye without any visible abnormalities.
+- The LayerCAM visualization highlights specific areas within the eye that might be contributing to the predicted condition of glaucoma.
+
+**LayerCAM Consistency:**
+The LayerCAM visualization highlights areas around the iris and pupil, which are typically regions where glaucoma can manifest. These areas show increased activity, suggesting they may be contributing to the predicted condition.
+
+**Model Consistency:**
+The image is broadly consistent with the classifier prediction of glaucoma. The highlighted areas in the LayerCAM visualization correspond to regions where glaucoma might be expected to appear based on the model's training data.
+
+**Limitations:**
+- The image quality is good, but there is some occlusion due to the close-up nature of the shot.
+- The LayerCAM visualization is based on a trained model and may not always accurately reflect real-world conditions.
+- The diagnosis is based on the model's predictions
+
+DISCLAIMER: This is an AI screening/explanation result and is not a veterinary diagnosis.

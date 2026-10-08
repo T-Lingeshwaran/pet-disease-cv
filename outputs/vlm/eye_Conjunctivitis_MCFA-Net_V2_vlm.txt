@@ -1,0 +1,28 @@
+PET HEALTH AI - VLM EXPLANATION
+======================================================================
+
+Image: C:\Users\lingeshwaran\projects\PEP-CV-Project\pet-gait-cv\data\eye_face\combined\test\Conjunctivitis\cat_crop_C12_33faa6d4-60a5-11ec-8402-0a7404972c70_jpg.rf.d51ec3a14671f5b5108dc8aa03201349.jpg
+Modality: eye
+Specialist model: MCFA-Net V2
+Router confidence: 97.95%
+Prediction: Conjunctivitis
+Prediction confidence: 83.27%
+
+**Observation:** The image shows an eye with visible eyelashes and a clear tear film. There is a noticeable discharge from the eye, which appears to be a white, gelatinous substance.
+
+**Anatomical Region:** Eye
+
+**Visible Features:** 
+- Discharge (white, gelatinous substance)
+- Clear tear film
+
+**LayerCAM Consistency:** The LayerCAM visualization highlights areas around the eye that may contribute to the classification of conjunctivitis. However, it does not provide a definitive ground-truth lesion annotation.
+
+**Model Consistency:** The image is broadly consistent with the classifier prediction of conjunctivitis, but it is important to note that the LayerCAM visualization suggests additional areas that might be relevant for further investigation.
+
+**Limitations:** 
+- The image quality is adequate but not ideal, potentially affecting the accuracy of the LayerCAM visualization.
+- The viewpoint is straightforward, but occlusions in the eyelashes could affect the interpretation of the LayerCAM results.
+- The LayerCAM visualization is not a definitive ground-truth lesion annotation, so it should be interpreted with caution.
+
+DISCLAIMER: This is an AI screening/explanation result and is not a veterinary diagnosis.

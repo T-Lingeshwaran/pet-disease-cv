@@ -1,0 +1,32 @@
+PET HEALTH AI - VLM EXPLANATION
+======================================================================
+
+Image: C:\Users\lingeshwaran\projects\PEP-CV-Project\pet-gait-cv\data\skin_coat\combined_clean\test\Dermatitis\1000010652_x16_jpg.rf.ed0278976c983f2783c3ba043be76763.jpg
+Modality: skin
+Specialist model: CSTF-Net
+Router confidence: 98.37%
+Prediction: Dermatitis
+Prediction confidence: 54.87%
+
+**Observation:**
+The image shows a dog's ear with a noticeable red, raised area on the outer surface of the ear. The fur around the affected area appears slightly discolored and there is a visible swelling.
+
+**Anatomical Region:**
+Outer surface of the dog's ear.
+
+**Visible Features:**
+- Redness
+- Swelling
+
+**LayerCAM Consistency:**
+The LayerCAM highlights a specific area on the ear, which appears to be broadly relevant to the visible abnormality.
+
+**Model Consistency:**
+The image is broadly consistent with the classifier prediction of dermatitis.
+
+**Limitations:**
+- The image quality may be compromised due to the angle and lighting.
+- The visibility of the swelling might be obscured by the surrounding fur.
+- The LayerCAM visualization is based on the classifier's predictions and may not accurately represent the actual condition.
+
+DISCLAIMER: This is an AI screening/explanation result and is not a veterinary diagnosis.

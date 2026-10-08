@@ -1,5 +1,5 @@
 """
-Controlled model-to-model Grad-CAM + VLM explainability comparison.
+Proposed-model prediction + LayerCAM + VLM.
 
 Compares:
     EYE:
@@ -12,19 +12,18 @@ Compares:
 
 IMPORTANT:
 - The SAME test image is passed to both competing models.
-- Each model uses its OWN architecture-specific Grad-CAM target layers.
-- For multi-branch models, branch CAMs and a branch-weighted fused CAM are saved.
+- Each model uses its OWN architecture-specific LayerCAM target layers.
+- For multi-branch models, branch CAMs and branch-weighted fused CAMs are saved for both LayerCAM and LayerCAM.
 - VLM receives the original image + the model's own CAM using the same prompt.
 - This script does NOT claim that a VLM is ground truth.
 
 First test:
-    python src/compare_explainability.py --eye-image "path/to/eye.jpg" --skin-image "path/to/skin.jpg"
+    python src/predict_proposed.py --eye-image "path/to/eye.jpg" --skin-image "path/to/skin.jpg"
 
 Optional VLM:
-    python src/compare_explainability.py --eye-image "..." --skin-image "..." --vlm
+    python src/predict_proposed.py --eye-image "..." --skin-image "..." --vlm
 
-If you only want Grad-CAM:
-    python src/compare_explainability.py --eye-image "..." --skin-image "..."
+The default run generates BOTH LayerCAM and LayerCAM.
 """
 
 from __future__ import annotations
@@ -46,15 +45,33 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
 
+try:
+    from transformers import (
+        AutoProcessor,
+        Qwen2_5_VLForConditionalGeneration,
+        BitsAndBytesConfig,
+    )
+    from qwen_vl_utils import process_vision_info
+    VLM_AVAILABLE = True
+except ImportError:
+    VLM_AVAILABLE = False
+
+VLM_MODEL_NAME = "Qwen/Qwen2.5-VL-3B-Instruct"
+VLM_MIN_PIXELS = 256 * 28 * 28
+VLM_MAX_PIXELS = 768 * 28 * 28
+VLM_MAX_NEW_TOKENS = 256
+
 
 # ============================================================
 # PATHS
 # ============================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+VLM_DIR = PROJECT_ROOT / "outputs" / "vlm"
+VLM_DIR.mkdir(parents=True, exist_ok=True)
 
 EYE_BASELINE_CHECKPOINT = (
-    PROJECT_ROOT / "outputs" / "eye_combined" / "best_efficientnet_b0.pth"
+    PROJECT_ROOT / "outputs" / "eye_combined" / "best_model.pth"
 )
 EYE_PROPOSED_CHECKPOINT = (
     PROJECT_ROOT / "outputs" / "eye_mcfa_v2" / "best_model.pth"
@@ -163,7 +180,13 @@ def get_checkpoint_classes(checkpoint, fallback):
     return list(fallback)
 
 
-def preprocess_rgb(image: Image.Image, size: int) -> torch.Tensor:
+def preprocess_rgb(image, size: int) -> torch.Tensor:
+    # Accept either a PIL image or a filesystem path.
+    if isinstance(image, (str, Path)):
+        image = Image.open(image).convert("RGB")
+    elif not isinstance(image, Image.Image):
+        raise TypeError(f"Expected PIL.Image.Image or path, got {type(image).__name__}")
+
     image = image.resize((size, size), Image.Resampling.BILINEAR)
     arr = np.asarray(image, dtype=np.float32) / 255.0
     tensor = torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0)
@@ -189,11 +212,17 @@ def normalize_cam(cam: np.ndarray) -> np.ndarray:
 
 
 def save_overlay(
-    image: Image.Image,
+    image,
     cam: np.ndarray,
     output_path: Path,
     title: str,
 ):
+    # Normalize filesystem paths to PIL images before visualization.
+    if isinstance(image, (str, Path)):
+        image = Image.open(image).convert("RGB")
+    elif not isinstance(image, Image.Image):
+        raise TypeError(f"Expected PIL.Image.Image or path, got {type(image).__name__}")
+
     original = np.asarray(image.convert("RGB"), dtype=np.uint8)
     h, w = original.shape[:2]
 
@@ -355,12 +384,12 @@ def sobel_texture(x):
 
 
 # ============================================================
-# GENERIC GRAD-CAM
+# GENERIC LAYERCAM
 # ============================================================
 
 class GradCAMHook:
     """
-    Architecture-independent Grad-CAM hook.
+    Architecture-independent LayerCAM hook.
 
     The hook is attached BEFORE the forward pass.
     """
@@ -381,7 +410,7 @@ class GradCAMHook:
 
     def generate(self, output: torch.Tensor, class_index: int) -> np.ndarray:
         if self.activations is None:
-            raise RuntimeError("Grad-CAM activation was not captured.")
+            raise RuntimeError("LayerCAM activation was not captured.")
 
         score = output[:, class_index].sum()
 
@@ -389,14 +418,14 @@ class GradCAMHook:
         score.backward(retain_graph=True)
 
         if self.gradients is None:
-            raise RuntimeError("Grad-CAM gradient was not captured.")
+            raise RuntimeError("LayerCAM gradient was not captured.")
 
         activations = self.activations
         gradients = self.gradients
 
         if activations.ndim != 4 or gradients.ndim != 4:
             raise RuntimeError(
-                f"Grad-CAM target must be [B,C,H,W], got "
+                f"LayerCAM target must be [B,C,H,W], got "
                 f"{tuple(activations.shape)}"
             )
 
@@ -412,6 +441,124 @@ class GradCAMHook:
         if self.handle is not None:
             self.handle.remove()
             self.handle = None
+
+
+# ============================================================
+# MODALITY ROUTER
+# ============================================================
+
+def build_modality_model():
+    """Build the EfficientNet-B0 binary modality classifier."""
+    model = models.efficientnet_b0(weights=None)
+    in_features = model.classifier[1].in_features
+    model.classifier[1] = nn.Linear(in_features, 2)
+    return model
+
+
+def predict_modality(image):
+    """Route the image to the eye or skin specialist model."""
+    checkpoint_path = PROJECT_ROOT / "outputs" / "modality" / "best_model.pth"
+
+    checkpoint = load_checkpoint(checkpoint_path)
+    model = build_modality_model()
+    state_dict = clean_state_dict(get_state_dict(checkpoint))
+    model.load_state_dict(state_dict, strict=True)
+    model = model.to(DEVICE).eval()
+
+    tensor = preprocess_rgb(image, 224).to(DEVICE)
+    tensor = normalize_imagenet(tensor)
+
+    with torch.no_grad():
+        logits = model(tensor)
+        probabilities = torch.softmax(logits, dim=1)[0]
+
+    classes = get_checkpoint_classes(checkpoint, ["eye", "skin"])
+    index = int(probabilities.argmax().item())
+    label = str(classes[index])
+    confidence = float(probabilities[index].item())
+
+    if "skin" in label.lower():
+        modality = "skin"
+    elif "eye" in label.lower():
+        modality = "eye"
+    else:
+        modality = "skin" if index == 1 else "eye"
+
+    del model, tensor, logits, probabilities
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    return modality, confidence
+
+
+# ============================================================
+# LAYERCAM
+# ============================================================
+
+class LayerCAMHook:
+    """
+    Architecture-independent LayerCAM hook.
+
+    LayerCAM uses the element-wise positive gradients at a target
+    convolutional layer as spatially varying weights:
+
+        CAM = ReLU(sum_c ReLU(dY/dA_c) * A_c)
+
+    This is intentionally kept separate from GradCAMHook so the two
+    attribution methods can be compared independently on the same image,
+    model, target class, and target layer.
+    """
+
+    def __init__(self, target_layer: nn.Module):
+        self.activations = None
+        self.gradients = None
+        self.handle = target_layer.register_forward_hook(self._forward_hook)
+
+    def _forward_hook(self, module, inputs, output):
+        self.activations = output
+
+        if isinstance(output, torch.Tensor) and output.requires_grad:
+            output.register_hook(self._save_gradient)
+
+    def _save_gradient(self, gradient):
+        self.gradients = gradient
+
+    def generate(self, output: torch.Tensor, class_index: int) -> np.ndarray:
+        if self.activations is None:
+            raise RuntimeError("LayerCAM activation was not captured.")
+
+        score = output[:, class_index].sum()
+
+        self.gradients = None
+        score.backward(retain_graph=True)
+
+        if self.gradients is None:
+            raise RuntimeError("LayerCAM gradient was not captured.")
+
+        activations = self.activations
+        gradients = self.gradients
+
+        if activations.ndim != 4 or gradients.ndim != 4:
+            raise RuntimeError(
+                f"LayerCAM target must be [B,C,H,W], got "
+                f"{tuple(activations.shape)}"
+            )
+
+        # LayerCAM: positive gradient at each spatial location weights
+        # the corresponding activation at that same spatial location.
+        positive_gradients = F.relu(gradients)
+        cam = (positive_gradients * activations).sum(dim=1)
+        cam = F.relu(cam)
+
+        cam = cam[0].detach().float().cpu().numpy()
+        return normalize_cam(cam)
+
+    def remove(self):
+        if self.handle is not None:
+            self.handle.remove()
+            self.handle = None
+
 
 
 # ============================================================
@@ -874,7 +1021,9 @@ def run_eye_efficientnet(image, output_dir):
     tensor = normalize_imagenet(tensor)
 
     target_layer = model.features[-1]
-    cam = GradCAMHook(target_layer)
+
+    gradcam = GradCAMHook(target_layer)
+    layercam = LayerCAMHook(target_layer)
 
     model.zero_grad(set_to_none=True)
 
@@ -882,15 +1031,28 @@ def run_eye_efficientnet(image, output_dir):
     predictions = predict_from_logits(logits, classes)
     target_class = predictions[0]["index"]
 
-    heatmap = cam.generate(logits, target_class)
-    cam.remove()
+    grad_heat = gradcam.generate(logits, target_class)
+    layer_heat = layercam.generate(logits, target_class)
 
-    overlay_path = output_dir / "efficientnet_b0_gradcam.png"
+    gradcam.remove()
+    layercam.remove()
+
+    grad_path = output_dir / "efficientnet_b0_gradcam.png"
+    layer_path = output_dir / "efficientnet_b0_layercam.png"
+
     save_overlay(
         image,
-        heatmap,
-        overlay_path,
-        f"EfficientNet-B0 | {predictions[0]['class']} "
+        grad_heat,
+        grad_path,
+        f"EfficientNet-B0 LayerCAM | {predictions[0]['class']} "
+        f"{predictions[0]['confidence']:.1%}",
+    )
+
+    save_overlay(
+        image,
+        layer_heat,
+        layer_path,
+        f"EfficientNet-B0 LayerCAM | {predictions[0]['class']} "
         f"{predictions[0]['confidence']:.1%}",
     )
 
@@ -899,7 +1061,9 @@ def run_eye_efficientnet(image, output_dir):
         "role": "best_non_proposed",
         "prediction": predictions[0],
         "top_k": predictions,
-        "cam_path": str(overlay_path),
+        "layercam_path": str(layer_path),
+        "cam_path": str(layer_path),
+        "primary_vlm_cam_method": "LayerCAM",
     }
 
     del model
@@ -915,82 +1079,54 @@ def run_eye_efficientnet(image, output_dir):
 # ============================================================
 
 def run_eye_mcfa(image, output_dir):
+    """Run MCFA-Net V2 and save ONLY the branch-weighted LayerCAM."""
     model, checkpoint_classes = load_model(
         EYE_PROPOSED_CHECKPOINT,
         MCFA_Net_V2(len(EYE_CLASSES)),
     )
 
     classes = checkpoint_classes or EYE_CLASSES
-
     tensor = preprocess_rgb(image, EYE_IMAGE_SIZE).to(DEVICE)
 
-    # Four architecture-specific hooks:
-    # RGB / HSV / YCbCr final convolutional features.
-    rgb_cam = GradCAMHook(model.rgb_backbone.features[-1])
-    hsv_cam = GradCAMHook(model.hsv_backbone.features[-1])
-    ycbcr_cam = GradCAMHook(model.ycbcr_backbone.features[-1])
+    rgb_layer = LayerCAMHook(model.rgb_backbone.features[-1])
+    hsv_layer = LayerCAMHook(model.hsv_backbone.features[-1])
+    ycbcr_layer = LayerCAMHook(model.ycbcr_backbone.features[-1])
 
-    model.zero_grad(set_to_none=True)
+    try:
+        model.zero_grad(set_to_none=True)
+        logits, info = model(tensor, return_branch_weights=True)
+        predictions = predict_from_logits(logits, classes)
+        target_class = predictions[0]["index"]
 
-    logits, info = model(
-        tensor,
-        return_branch_weights=True
-    )
+        rgb_heat = rgb_layer.generate(logits, target_class)
+        hsv_heat = hsv_layer.generate(logits, target_class)
+        ycbcr_heat = ycbcr_layer.generate(logits, target_class)
 
-    predictions = predict_from_logits(logits, classes)
-    target_class = predictions[0]["index"]
-
-    rgb_heat = rgb_cam.generate(logits, target_class)
-    hsv_heat = hsv_cam.generate(logits, target_class)
-    ycbcr_heat = ycbcr_cam.generate(logits, target_class)
-
-    # Branch gate is part of the actual MCFA decision path.
-    branch_weights = (
-        info["branch_weights"][0]
-        .detach()
-        .float()
-        .cpu()
-        .numpy()
-    )
-
-    # Fuse branch CAMs using the learned branch weights.
-    fused = (
-        branch_weights[0] * rgb_heat
-        + branch_weights[1] * hsv_heat
-        + branch_weights[2] * ycbcr_heat
-    )
-    fused = normalize_cam(fused)
-
-    rgb_cam.remove()
-    hsv_cam.remove()
-    ycbcr_cam.remove()
-
-    branch_names = ["rgb", "hsv", "ycbcr"]
-
-    branch_paths = {}
-
-    for name, heat in zip(
-        branch_names,
-        [rgb_heat, hsv_heat, ycbcr_heat]
-    ):
-        path = output_dir / f"mcfa_v2_{name}_gradcam.png"
-        save_overlay(
-            image,
-            heat,
-            path,
-            f"MCFA V2 {name.upper()} | "
-            f"{predictions[0]['class']} "
-            f"{predictions[0]['confidence']:.1%}",
+        branch_weights = (
+            info["branch_weights"][0]
+            .detach().float().cpu().numpy()
         )
-        branch_paths[name] = str(path)
 
-    fused_path = output_dir / "mcfa_v2_fused_gradcam.png"
+        layercam = normalize_cam(
+            branch_weights[0] * rgb_heat
+            + branch_weights[1] * hsv_heat
+            + branch_weights[2] * ycbcr_heat
+        )
+
+    finally:
+        rgb_layer.remove()
+        hsv_layer.remove()
+        ycbcr_layer.remove()
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    layercam_path = output_dir / "mcfa_v2_layercam.png"
 
     save_overlay(
         image,
-        fused,
-        fused_path,
-        f"MCFA-Net V2 FUSED | {predictions[0]['class']} "
+        layercam,
+        layercam_path,
+        f"MCFA-Net V2 LayerCAM | {predictions[0]['class']} "
         f"{predictions[0]['confidence']:.1%}",
     )
 
@@ -999,13 +1135,14 @@ def run_eye_mcfa(image, output_dir):
         "role": "proposed",
         "prediction": predictions[0],
         "top_k": predictions,
-        "cam_paths": branch_paths,
-        "fused_cam_path": str(fused_path),
+        "layercam_path": str(layercam_path),
+        "cam_path": str(layercam_path),
         "branch_weights": {
             "rgb": float(branch_weights[0]),
             "hsv": float(branch_weights[1]),
             "ycbcr": float(branch_weights[2]),
         },
+        "primary_vlm_cam_method": "LayerCAM",
     }
 
     del model
@@ -1049,7 +1186,9 @@ def run_skin_efficientnet_v2s(image, output_dir):
     tensor = normalize_imagenet(tensor)
 
     target_layer = model.features[-1]
-    cam = GradCAMHook(target_layer)
+
+    gradcam = GradCAMHook(target_layer)
+    layercam = LayerCAMHook(target_layer)
 
     model.zero_grad(set_to_none=True)
 
@@ -1058,16 +1197,28 @@ def run_skin_efficientnet_v2s(image, output_dir):
     predictions = predict_from_logits(logits, classes)
     target_class = predictions[0]["index"]
 
-    heatmap = cam.generate(logits, target_class)
-    cam.remove()
+    grad_heat = gradcam.generate(logits, target_class)
+    layer_heat = layercam.generate(logits, target_class)
 
-    path = output_dir / "efficientnetv2s_gradcam.png"
+    gradcam.remove()
+    layercam.remove()
+
+    grad_path = output_dir / "efficientnetv2s_gradcam.png"
+    layer_path = output_dir / "efficientnetv2s_layercam.png"
 
     save_overlay(
         image,
-        heatmap,
-        path,
-        f"EfficientNetV2-S | {predictions[0]['class']} "
+        grad_heat,
+        grad_path,
+        f"EfficientNetV2-S LayerCAM | {predictions[0]['class']} "
+        f"{predictions[0]['confidence']:.1%}",
+    )
+
+    save_overlay(
+        image,
+        layer_heat,
+        layer_path,
+        f"EfficientNetV2-S LayerCAM | {predictions[0]['class']} "
         f"{predictions[0]['confidence']:.1%}",
     )
 
@@ -1076,7 +1227,8 @@ def run_skin_efficientnet_v2s(image, output_dir):
         "role": "best_non_proposed",
         "prediction": predictions[0],
         "top_k": predictions,
-        "cam_path": str(path),
+        "layercam_path": str(layer_path),
+        "cam_path": str(layer_path),
     }
 
     del model
@@ -1092,84 +1244,55 @@ def run_skin_efficientnet_v2s(image, output_dir):
 # ============================================================
 
 def run_skin_cstf(image, output_dir):
+    """Run CSTF-Net and save ONLY the branch-weighted LayerCAM."""
     model, checkpoint_classes = load_model(
         SKIN_PROPOSED_CHECKPOINT,
         CSTFNet(len(SKIN_CLASSES)),
     )
 
     classes = checkpoint_classes or SKIN_CLASSES
+    tensor = preprocess_rgb(image, SKIN_PROPOSED_IMAGE_SIZE).to(DEVICE)
 
-    tensor = preprocess_rgb(
-        image,
-        SKIN_PROPOSED_IMAGE_SIZE
-    ).to(DEVICE)
+    rgb_layer = LayerCAMHook(model.rgb_branch.features[-1])
+    color_layer = LayerCAMHook(model.color_branch.features[-1])
+    texture_layer = LayerCAMHook(model.texture_branch.features[-1])
 
-    # CSTF has three different feature branches.
-    rgb_cam = GradCAMHook(model.rgb_branch.features[-1])
-    color_cam = GradCAMHook(model.color_branch.features[-1])
-    texture_cam = GradCAMHook(model.texture_branch.features[-1])
+    try:
+        model.zero_grad(set_to_none=True)
+        outputs = model(tensor, return_features=True)
+        logits = outputs["logits"]
+        predictions = predict_from_logits(logits, classes)
+        target_class = predictions[0]["index"]
 
-    model.zero_grad(set_to_none=True)
+        rgb_heat = rgb_layer.generate(logits, target_class)
+        color_heat = color_layer.generate(logits, target_class)
+        texture_heat = texture_layer.generate(logits, target_class)
 
-    outputs = model(
-        tensor,
-        return_features=True
-    )
-
-    logits = outputs["logits"]
-
-    predictions = predict_from_logits(logits, classes)
-    target_class = predictions[0]["index"]
-
-    rgb_heat = rgb_cam.generate(logits, target_class)
-    color_heat = color_cam.generate(logits, target_class)
-    texture_heat = texture_cam.generate(logits, target_class)
-
-    branch_weights = (
-        outputs["branch_weights"][0]
-        .detach()
-        .float()
-        .cpu()
-        .numpy()
-    )
-
-    fused = (
-        branch_weights[0] * rgb_heat
-        + branch_weights[1] * color_heat
-        + branch_weights[2] * texture_heat
-    )
-    fused = normalize_cam(fused)
-
-    rgb_cam.remove()
-    color_cam.remove()
-    texture_cam.remove()
-
-    branch_names = ["rgb", "hsv", "texture"]
-    branch_heats = [rgb_heat, color_heat, texture_heat]
-
-    branch_paths = {}
-
-    for name, heat in zip(branch_names, branch_heats):
-        path = output_dir / f"cstf_{name}_gradcam.png"
-
-        save_overlay(
-            image,
-            heat,
-            path,
-            f"CSTF {name.upper()} | "
-            f"{predictions[0]['class']} "
-            f"{predictions[0]['confidence']:.1%}",
+        branch_weights = (
+            outputs["branch_weights"][0]
+            .detach().float().cpu().numpy()
         )
 
-        branch_paths[name] = str(path)
+        layercam = normalize_cam(
+            branch_weights[0] * rgb_heat
+            + branch_weights[1] * color_heat
+            + branch_weights[2] * texture_heat
+        )
 
-    fused_path = output_dir / "cstf_fused_gradcam.png"
+    finally:
+        rgb_layer.remove()
+        color_layer.remove()
+        texture_layer.remove()
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    layercam_path = output_dir / "cstf_layercam.png"
 
     save_overlay(
         image,
-        fused,
-        fused_path,
-        f"CSTF-Net FUSED | {predictions[0]['class']} "
+        layercam,
+        layercam_path,
+        f"CSTF-Net LayerCAM | {predictions[0]['class']} "
         f"{predictions[0]['confidence']:.1%}",
     )
 
@@ -1178,13 +1301,14 @@ def run_skin_cstf(image, output_dir):
         "role": "proposed",
         "prediction": predictions[0],
         "top_k": predictions,
-        "cam_paths": branch_paths,
-        "fused_cam_path": str(fused_path),
+        "layercam_path": str(layercam_path),
+        "cam_path": str(layercam_path),
         "branch_weights": {
             "rgb": float(branch_weights[0]),
-            "hsv": float(branch_weights[1]),
+            "color": float(branch_weights[1]),
             "texture": float(branch_weights[2]),
         },
+        "primary_vlm_cam_method": "LayerCAM",
     }
 
     del model
@@ -1195,119 +1319,135 @@ def run_skin_cstf(image, output_dir):
     return result
 
 
+
 # ============================================================
 # VLM
 # ============================================================
 
-VLM_MODEL_ID = os.environ.get(
-    "PET_VLM_MODEL",
-    "Qwen/Qwen2.5-VL-3B-Instruct"
-)
+def build_vlm_prompt(
+    modality,
+    model_name,
+    predicted_class,
+    confidence,
+    router_confidence,
+):
+    return f"""
+You are a cautious veterinary image-analysis assistant.
+
+Analyze the provided pet image and the LayerCAM visualization.
+
+A separate computer-vision pipeline produced:
+- Detected modality: {modality}
+- Modality confidence: {router_confidence * 100:.2f}%
+- Specialist model: {model_name}
+- Predicted condition: {predicted_class}
+- Condition confidence: {confidence * 100:.2f}%
+
+The LayerCAM visualization shows image regions that influenced the
+classifier prediction. It is NOT a ground-truth lesion annotation.
+
+Do not replace the classifier prediction with your own diagnosis.
+
+Return exactly these sections:
+
+OBSERVATION:
+Briefly describe what is visibly present.
+
+ANATOMICAL REGION:
+Identify the relevant body region.
+
+VISIBLE FEATURES:
+List only features that are actually visible, such as redness,
+swelling, discharge, cloudiness, opacity, hair loss, scaling,
+crusting, circular lesions, pigmentation changes, or irritation.
+
+LAYERCAM CONSISTENCY:
+Explain whether the highlighted region appears broadly relevant
+to the visible abnormality, partly relevant, or poorly localized.
+
+MODEL CONSISTENCY:
+State whether the image is broadly consistent with the classifier
+prediction, partially consistent, or not clearly consistent.
+Do not claim that the image proves the condition.
+
+LIMITATIONS:
+Mention important limitations such as image quality, viewpoint,
+occlusion, or inability to establish a veterinary diagnosis.
+
+Be concise and medically cautious. Do not invent symptoms.
+Do not prescribe medication or treatment.
+"""
 
 
 def run_vlm(
-    original_path: Path,
-    cam_path: Path,
-    model_name: str,
-    prediction: Dict,
-    modality: str,
+    image_path,
+    layercam_path,
+    modality,
+    model_name,
+    prediction,
+    router_confidence,
 ):
-    """
-    Run Qwen2.5-VL using the SAME prompt template for every model.
+    if not VLM_AVAILABLE:
+        print("\nVLM dependencies are not installed; skipping VLM.")
+        return None
 
-    Requires:
-        transformers
-        accelerate
-        bitsandbytes
-        qwen-vl-utils
-    """
+    if not torch.cuda.is_available():
+        print("\nCUDA unavailable; skipping Qwen2.5-VL.")
+        return None
 
-    try:
-        from transformers import (
-            Qwen2_5_VLForConditionalGeneration,
-            AutoProcessor,
-            BitsAndBytesConfig,
-        )
-        from qwen_vl_utils import process_vision_info
-    except ImportError as exc:
-        raise RuntimeError(
-            "VLM dependencies are missing. Install your existing Qwen-VL "
-            "dependencies before using --vlm."
-        ) from exc
-
-    print(f"\nLoading VLM: {VLM_MODEL_ID}")
+    print("\n" + "-" * 70)
+    print("LOADING VISION-LANGUAGE MODEL")
+    print("-" * 70)
+    print(f"Model: {VLM_MODEL_NAME}")
+    print("Quantization: 4-bit NF4")
 
     quant_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_use_double_quant=True,
         bnb_4bit_compute_dtype=torch.float16,
+        bnb_4bit_use_double_quant=True,
     )
 
-    vlm = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        VLM_MODEL_ID,
+    processor = AutoProcessor.from_pretrained(
+        VLM_MODEL_NAME,
+        min_pixels=VLM_MIN_PIXELS,
+        max_pixels=VLM_MAX_PIXELS,
+    )
+
+    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+        VLM_MODEL_NAME,
         quantization_config=quant_config,
         device_map="auto",
         torch_dtype=torch.float16,
         attn_implementation="sdpa",
     )
+    model.eval()
 
-    processor = AutoProcessor.from_pretrained(
-        VLM_MODEL_ID,
-        min_pixels=256 * 28 * 28,
-        max_pixels=768 * 28 * 28,
+    prompt = build_vlm_prompt(
+        modality=modality,
+        model_name=model_name,
+        predicted_class=prediction["class"],
+        confidence=prediction["confidence"],
+        router_confidence=router_confidence,
     )
 
-    prompt = f"""
-You are evaluating a computer-vision explainability result for a
-{modality} image.
-
-Model:
-{model_name}
-
-Predicted class:
-{prediction["class"]}
-
-Confidence:
-{prediction["confidence"]:.4f}
-
-The first image is the original animal image.
-The second image is this model's Grad-CAM overlay.
-
-Assess only visible evidence.
-
-Return a concise structured explanation with:
-1. Visible observation
-2. Anatomical/skin region highlighted by Grad-CAM
-3. Whether the highlighted region appears relevant to the predicted class
-4. Whether the activation appears focused, partially focused, or diffuse
-5. Important uncertainty/caution
-
-Do NOT diagnose the animal.
-Do NOT invent symptoms, history, treatment, or clinical facts that are
-not visible.
-Do NOT assume the Grad-CAM proves causal localization.
-"""
-
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "image": str(original_path),
-                },
-                {
-                    "type": "image",
-                    "image": str(cam_path),
-                },
-                {
-                    "type": "text",
-                    "text": prompt,
-                },
-            ],
-        }
-    ]
+    messages = [{
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "image": str(Path(image_path).resolve()),
+            },
+            {
+                "type": "image",
+                "image": str(Path(layercam_path).resolve()),
+            },
+            {
+                "type": "text",
+                "text": prompt,
+            },
+        ],
+    }]
 
     text = processor.apply_chat_template(
         messages,
@@ -1325,184 +1465,75 @@ Do NOT assume the Grad-CAM proves causal localization.
         return_tensors="pt",
     )
 
-    inputs = inputs.to(vlm.device)
+    input_device = next(model.parameters()).device
+    for key, value in inputs.items():
+        if hasattr(value, "to"):
+            inputs[key] = value.to(input_device)
 
-    generated_ids = vlm.generate(
-        **inputs,
-        max_new_tokens=350,
-    )
+    print("\nGenerating VLM explanation...")
 
-    generated_ids_trimmed = [
-        out_ids[len(in_ids):]
-        for in_ids, out_ids in zip(
-            inputs.input_ids,
-            generated_ids
+    with torch.inference_mode():
+        generated_ids = model.generate(
+            **inputs,
+            max_new_tokens=VLM_MAX_NEW_TOKENS,
+            do_sample=False,
+        )
+
+    trimmed = [
+        output_ids[len(input_ids):]
+        for input_ids, output_ids in zip(
+            inputs["input_ids"], generated_ids
         )
     ]
 
-    output_text = processor.batch_decode(
-        generated_ids_trimmed,
+    result = processor.batch_decode(
+        trimmed,
         skip_special_tokens=True,
-        clean_up_tokenization_spaces=False,
-    )[0]
+        clean_up_tokenization_spaces=True,
+    )[0].strip()
 
-    del inputs
-    del generated_ids
-    del vlm
-    del processor
+    del model, processor
     gc.collect()
-
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-    return output_text
+    return result
 
 
-# ============================================================
-# SAVE RESULT
-# ============================================================
-
-def save_json(data, path: Path):
-    path.parent.mkdir(parents=True, exist_ok=True)
+def save_vlm_result(
+    result,
+    modality,
+    model_name,
+    prediction,
+    router_confidence,
+    image_path,
+):
+    safe_class = "".join(
+        ch if ch.isalnum() or ch in "-_" else "_"
+        for ch in prediction["class"]
+    )
+    safe_model = model_name.replace(" ", "_")
+    path = VLM_DIR / f"{modality}_{safe_class}_{safe_model}_vlm.txt"
 
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-
-
-def run_eye(image_path: Path, use_vlm: bool):
-    image = load_image(image_path)
-
-    out = OUTPUT_ROOT / "eye" / image_path.stem
-    out.mkdir(parents=True, exist_ok=True)
-
-    # Save exact original used in comparison.
-    original_copy = out / "original.jpg"
-    image.save(original_copy, quality=95)
-
-    print("\n" + "=" * 75)
-    print("EYE EXPLAINABILITY COMPARISON")
-    print("=" * 75)
-
-    baseline = run_eye_efficientnet(image, out)
-
-    # Release baseline before loading the much larger MCFA model.
-    proposed = run_eye_mcfa(image, out)
-
-    side_by_side = out / "baseline_vs_mcfa.png"
-    save_side_by_side(
-        Path(baseline["cam_path"]),
-        Path(proposed["fused_cam_path"]),
-        side_by_side,
-        "EfficientNet-B0",
-        "MCFA-Net V2",
-    )
-
-    result = {
-        "modality": "eye",
-        "image": str(image_path),
-        "models": [baseline, proposed],
-    }
-
-    if use_vlm:
-        print("\nRunning VLM for EfficientNet-B0...")
-        baseline_vlm = run_vlm(
-            original_copy,
-            Path(baseline["cam_path"]),
-            baseline["model"],
-            baseline["prediction"],
-            "eye",
+        f.write("PET HEALTH AI - VLM EXPLANATION\n")
+        f.write("=" * 70 + "\n\n")
+        f.write(f"Image: {image_path}\n")
+        f.write(f"Modality: {modality}\n")
+        f.write(f"Specialist model: {model_name}\n")
+        f.write(f"Router confidence: {router_confidence * 100:.2f}%\n")
+        f.write(f"Prediction: {prediction['class']}\n")
+        f.write(
+            f"Prediction confidence: {prediction['confidence'] * 100:.2f}%\n\n"
+        )
+        f.write(result)
+        f.write("\n\n")
+        f.write(
+            "DISCLAIMER: This is an AI screening/explanation result "
+            "and is not a veterinary diagnosis.\n"
         )
 
-        result["models"][0]["vlm_explanation"] = baseline_vlm
-
-        print("\nRunning VLM for MCFA-Net V2...")
-        proposed_vlm = run_vlm(
-            original_copy,
-            Path(proposed["fused_cam_path"]),
-            proposed["model"],
-            proposed["prediction"],
-            "eye",
-        )
-
-        result["models"][1]["vlm_explanation"] = proposed_vlm
-
-        (out / "vlm_efficientnet.txt").write_text(
-            baseline_vlm, encoding="utf-8"
-        )
-        (out / "vlm_mcfa_v2.txt").write_text(
-            proposed_vlm, encoding="utf-8"
-        )
-
-    save_json(result, out / "comparison.json")
-
-    return result
-
-
-def run_skin(image_path: Path, use_vlm: bool):
-    image = load_image(image_path)
-
-    out = OUTPUT_ROOT / "skin" / image_path.stem
-    out.mkdir(parents=True, exist_ok=True)
-
-    original_copy = out / "original.jpg"
-    image.save(original_copy, quality=95)
-
-    print("\n" + "=" * 75)
-    print("SKIN EXPLAINABILITY COMPARISON")
-    print("=" * 75)
-
-    baseline = run_skin_efficientnet_v2s(image, out)
-
-    proposed = run_skin_cstf(image, out)
-
-    side_by_side = out / "baseline_vs_cstf.png"
-    save_side_by_side(
-        Path(baseline["cam_path"]),
-        Path(proposed["fused_cam_path"]),
-        side_by_side,
-        "EfficientNetV2-S",
-        "CSTF-Net",
-    )
-
-    result = {
-        "modality": "skin",
-        "image": str(image_path),
-        "models": [baseline, proposed],
-    }
-
-    if use_vlm:
-        print("\nRunning VLM for EfficientNetV2-S...")
-        baseline_vlm = run_vlm(
-            original_copy,
-            Path(baseline["cam_path"]),
-            baseline["model"],
-            baseline["prediction"],
-            "skin",
-        )
-
-        result["models"][0]["vlm_explanation"] = baseline_vlm
-
-        print("\nRunning VLM for CSTF-Net...")
-        proposed_vlm = run_vlm(
-            original_copy,
-            Path(proposed["fused_cam_path"]),
-            proposed["model"],
-            proposed["prediction"],
-            "skin",
-        )
-
-        result["models"][1]["vlm_explanation"] = proposed_vlm
-
-        (out / "vlm_efficientnetv2s.txt").write_text(
-            baseline_vlm, encoding="utf-8"
-        )
-        (out / "vlm_cstf.txt").write_text(
-            proposed_vlm, encoding="utf-8"
-        )
-
-    save_json(result, out / "comparison.json")
-
-    return result
+    return path
 
 
 # ============================================================
@@ -1511,74 +1542,100 @@ def run_skin(image_path: Path, use_vlm: bool):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Controlled Grad-CAM + VLM model comparison."
+        description="Pet Health AI: proposed model prediction + LayerCAM + optional VLM."
     )
-
     parser.add_argument(
-        "--eye-image",
-        type=str,
-        default=None,
-        help="Path to one eye test image.",
+        "image",
+        help="Path to the input image",
     )
-
     parser.add_argument(
-        "--skin-image",
-        type=str,
-        default=None,
-        help="Path to one skin test image.",
-    )
-
-    parser.add_argument(
-        "--vlm",
+        "--no-vlm",
         action="store_true",
-        help="Run Qwen2.5-VL after Grad-CAM generation.",
+        help="Skip Qwen2.5-VL explanation",
     )
-
     args = parser.parse_args()
 
-    print("=" * 75)
-    print("CONTROLLED MODEL EXPLAINABILITY COMPARISON")
-    print("=" * 75)
-    print(f"Device: {DEVICE}")
+    image_path = Path(args.image)
+    image = load_image(image_path)
+
+    print("=" * 70)
+    print("                 PET HEALTH AI")
+    print("       Proposed Models + LayerCAM + VLM")
+    print("=" * 70)
+
     if torch.cuda.is_available():
         print(f"GPU: {torch.cuda.get_device_name(0)}")
-    print(f"Output: {OUTPUT_ROOT}")
-    print("=" * 75)
+    else:
+        print("GPU: Not available - using CPU")
 
-    if not args.eye_image and not args.skin_image:
-        parser.error(
-            "Provide at least --eye-image or --skin-image."
-        )
+    print(f"Image: {image_path}")
+    print(f"Size : {image.width} x {image.height}")
 
-    results = {}
+    modality, router_confidence = predict_modality(image)
 
-    if args.eye_image:
-        results["eye"] = run_eye(
-            Path(args.eye_image),
-            args.vlm,
-        )
+    print("\n" + "-" * 70)
+    print("IMAGE ROUTING")
+    print("-" * 70)
+    print(f"Detected modality : {modality.upper()}")
+    print(f"Router confidence : {router_confidence * 100:.2f}%")
 
-    # Ensure the eye models are released before skin models.
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-
-    if args.skin_image:
-        results["skin"] = run_skin(
-            Path(args.skin_image),
-            args.vlm,
-        )
-
-    save_json(
-        results,
-        OUTPUT_ROOT / "latest_comparison.json",
+    output_dir = (
+        PROJECT_ROOT / "outputs" / "layercam" / modality / image_path.stem
     )
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("\n" + "=" * 75)
-    print("COMPARISON COMPLETE")
-    print("=" * 75)
-    print(f"Results: {OUTPUT_ROOT}")
-    print("=" * 75)
+    if modality == "skin":
+        result = run_skin_cstf(image, output_dir)
+    elif modality == "eye":
+        result = run_eye_mcfa(image, output_dir)
+    else:
+        raise RuntimeError(f"Unknown modality: {modality}")
+
+    prediction = result["prediction"]
+    layercam_path = Path(result["layercam_path"])
+    model_name = result["model"]
+
+    print("\nSpecialist model:", model_name)
+    print(
+        f"Prediction: {prediction['class']} "
+        f"({prediction['confidence'] * 100:.2f}%)"
+    )
+    print(f"LayerCAM: {layercam_path}")
+
+    if not args.no_vlm:
+        try:
+            vlm_result = run_vlm(
+                image_path=image_path,
+                layercam_path=layercam_path,
+                modality=modality,
+                model_name=model_name,
+                prediction=prediction,
+                router_confidence=router_confidence,
+            )
+
+            if vlm_result:
+                print("\n" + "=" * 70)
+                print("VLM ANALYSIS")
+                print("=" * 70)
+                print(vlm_result)
+
+                vlm_path = save_vlm_result(
+                    result=vlm_result,
+                    modality=modality,
+                    model_name=model_name,
+                    prediction=prediction,
+                    router_confidence=router_confidence,
+                    image_path=image_path,
+                )
+                print(f"\nVLM explanation saved:\n{vlm_path}")
+
+        except Exception as exc:
+            print("\nVLM failed, but prediction + LayerCAM completed.")
+            print(f"Reason: {exc}")
+
+    print("\n" + "=" * 70)
+    print("Prediction completed successfully.")
+    print("=" * 70)
 
 
 if __name__ == "__main__":

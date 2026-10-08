@@ -1,0 +1,29 @@
+PET HEALTH AI - VLM EXPLANATION
+======================================================================
+
+Image: C:\Users\lingeshwaran\projects\PEP-CV-Project\pet-gait-cv\data\skin_coat\combined_clean\test\Fungal_infections\fung4_jpg.rf.b0ecd3057f5cb562cd73ef5a168a772a.jpg
+Modality: skin
+Specialist model: CSTF-Net
+Router confidence: 98.30%
+Prediction: Fungal_infections
+Prediction confidence: 76.26%
+
+**Observation:** The image shows a close-up of a pet's skin, specifically focusing on an area with reddened patches. The skin appears to be inflamed, with some areas showing signs of irritation.
+
+**Anatomical Region:** The affected area is located on the pet's skin, likely a part of the body where the inflammation is observed.
+
+**Visible Features:** 
+- Redness
+- Swelling
+
+**LayerCAM Consistency:** The highlighted region in the LayerCAM visualization appears to be broadly relevant to the visible abnormality, as it focuses on the same area of skin with similar characteristics (redness and swelling).
+
+**Model Consistency:** The image is broadly consistent with the classifier prediction, which indicates a high likelihood of fungal infections based on the detected modality and the predicted condition.
+
+**Limitations:** 
+- The image quality may be limited due to the close-up nature, which can obscure finer details.
+- The viewpoint might not provide a comprehensive view of the entire affected area.
+- Occlusion could affect the accuracy of the LayerCAM visualization if other parts of the skin are obscured.
+- The image does not establish a definitive veterinary diagnosis; it relies on the classifier prediction for guidance.
+
+DISCLAIMER: This is an AI screening/explanation result and is not a veterinary diagnosis.
