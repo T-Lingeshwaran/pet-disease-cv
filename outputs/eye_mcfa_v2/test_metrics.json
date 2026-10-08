@@ -1,0 +1,31 @@
+{
+  "model": "MCFA-Net-v2",
+  "description": "Multi-Color Feature Attention Network v2",
+  "dataset": "eye_face/combined",
+  "best_epoch": 13,
+  "best_validation_macro_f1": 0.8039360715879493,
+  "test_accuracy": 0.7535971223021583,
+  "test_macro_precision": 0.8093715557943749,
+  "test_macro_recall": 0.8144575751452607,
+  "test_macro_f1": 0.8097297163343931,
+  "num_classes": 9,
+  "image_size": 224,
+  "batch_size": 6,
+  "epochs_requested": 50,
+  "token_dim": 128,
+  "num_heads": 4,
+  "num_transformer_layers": 2,
+  "freeze_early_blocks": 4,
+  "total_parameters": 13072129,
+  "trainable_parameters": 12874939,
+  "mean_branch_weights": {
+    "rgb": 0.05887035389594975,
+    "hsv": 0.10856499671741311,
+    "ycbcr": 0.8325646492006029
+  },
+  "mean_fusion_weights": {
+    "rgb": 0.27130051284170836,
+    "hsv": 0.27344271531261555,
+    "ycbcr": 0.45525677183227575
+  }
+}

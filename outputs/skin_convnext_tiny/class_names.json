@@ -1,0 +1,28 @@
+{
+  "class_names": [
+    "Bacterial_dermatosis",
+    "Dermatitis",
+    "Flea Allergy",
+    "Fungal_infections",
+    "Hypersensitivity",
+    "Hypersensitivity_allergic_dermatosis",
+    "Scabies",
+    "demodicosis",
+    "hotspot",
+    "mange",
+    "ringworm"
+  ],
+  "class_to_idx": {
+    "Bacterial_dermatosis": 0,
+    "Dermatitis": 1,
+    "Flea Allergy": 2,
+    "Fungal_infections": 3,
+    "Hypersensitivity": 4,
+    "Hypersensitivity_allergic_dermatosis": 5,
+    "Scabies": 6,
+    "demodicosis": 7,
+    "hotspot": 8,
+    "mange": 9,
+    "ringworm": 10
+  }
+}

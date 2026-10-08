@@ -1,0 +1,5 @@
+model,task,accuracy,macro_f1,macro_precision,macro_recall,loss,source_file
+Eye CSF-Net,Eye condition classification,0.7320143884892086,0.7841198648844241,,0.7800577023875777,1.2849703977862708,outputs\eye_csfnet\test_metrics.json
+Skin EfficientNet-B0,Skin condition classification,0.8465703971119134,0.7363234889857497,0.7420723541936076,0.7790705697647397,0.8141771128892038,outputs\skin_efficientnet\test_metrics.json
+Skin EfficientNetV2-S,Skin condition classification,0.8592057761732852,0.7153230933366791,,0.7397602021020994,0.8040618115383795,outputs\skin_efficientnet_v2s\test_metrics.json
+Modality Router,Eye vs Skin classification,1.0,1.0,,1.0,,outputs\modality\test_metrics.json

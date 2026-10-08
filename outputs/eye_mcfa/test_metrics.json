@@ -1,0 +1,17 @@
+{
+  "model": "MCFA-Net",
+  "description": "Multi-Color Feature Attention Network",
+  "dataset": "eye_face/combined",
+  "best_epoch": 12,
+  "best_validation_macro_f1": 0.8098923896089163,
+  "test_accuracy": 0.7491007194244604,
+  "test_macro_precision": 0.8078747976731467,
+  "test_macro_recall": 0.8155827872885606,
+  "test_macro_f1": 0.8069305388364728,
+  "num_classes": 9,
+  "image_size": 224,
+  "batch_size": 8,
+  "epochs_requested": 50,
+  "total_parameters": 13030656,
+  "trainable_parameters": 13030656
+}

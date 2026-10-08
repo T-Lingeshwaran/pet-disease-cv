@@ -1,4 +1,3 @@
-@"
 # Python
 __pycache__/
 *.pyc
@@ -18,15 +17,11 @@ data/body_condition/
 data/symptoms/
 data/injury_triage/
 
-# Model checkpoints / large generated files
+# Large model checkpoints
 *.pth
 *.pt
 *.onnx
 *.safetensors
-
-# Generated outputs
-outputs/*
-!outputs/.gitkeep
 
 # Logs
 *.log
@@ -34,4 +29,3 @@ outputs/*
 # OS
 .DS_Store
 Thumbs.db
-"@ | Set-Content .gitignore

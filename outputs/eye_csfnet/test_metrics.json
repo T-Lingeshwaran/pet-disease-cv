@@ -1,0 +1,22 @@
+{
+  "test_loss": 1.2849703977862708,
+  "test_accuracy": 0.7320143884892086,
+  "test_macro_f1": 0.7841198648844241,
+  "test_macro_recall": 0.7800577023875777,
+  "best_validation_macro_f1": 0.7807430801119974,
+  "best_epoch": 17,
+  "num_classes": 9,
+  "classes": [
+    "Blepharitis",
+    "Cataract",
+    "Cherry_Eye",
+    "Conjunctivitis",
+    "Corneal_Sequestrum",
+    "Corneal_Ulcer",
+    "Glaucoma",
+    "Health",
+    "Non_ulcerative"
+  ],
+  "test_samples": 1112,
+  "architecture": "CSF-Net-inspired"
+}

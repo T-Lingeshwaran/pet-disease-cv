@@ -1,0 +1,29 @@
+{
+  "architecture": "CSTF-Net",
+  "best_epoch": 9,
+  "best_validation_macro_f1": 0.6580366994132052,
+  "test_accuracy": 0.851985559566787,
+  "test_macro_precision": 0.7511531992811871,
+  "test_macro_recall": 0.7853192338147873,
+  "test_macro_f1": 0.7383765090683938,
+  "num_test_images": 554,
+  "num_classes": 11,
+  "class_names": [
+    "Bacterial_dermatosis",
+    "Dermatitis",
+    "Flea Allergy",
+    "Fungal_infections",
+    "Hypersensitivity",
+    "Hypersensitivity_allergic_dermatosis",
+    "Scabies",
+    "demodicosis",
+    "hotspot",
+    "mange",
+    "ringworm"
+  ],
+  "image_size": 224,
+  "batch_size": 8,
+  "learning_rate": 0.0001,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.05
+}

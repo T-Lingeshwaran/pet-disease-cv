@@ -1,0 +1,15 @@
+                    precision    recall  f1-score   support
+
+       Blepharitis     0.6263    0.6596    0.6425        94
+          Cataract     1.0000    1.0000    1.0000         7
+        Cherry_Eye     1.0000    1.0000    1.0000         9
+    Conjunctivitis     0.6889    0.5688    0.6231       218
+Corneal_Sequestrum     0.7902    0.8194    0.8045       216
+     Corneal_Ulcer     0.6084    0.6352    0.6215       159
+          Glaucoma     1.0000    0.8000    0.8889         5
+            Health     0.8604    0.8604    0.8604       308
+    Non_ulcerative     0.5652    0.6771    0.6161        96
+
+          accuracy                         0.7320      1112
+         macro avg     0.7933    0.7801    0.7841      1112
+      weighted avg     0.7345    0.7320    0.7315      1112

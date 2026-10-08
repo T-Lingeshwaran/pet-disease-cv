@@ -1,0 +1,42 @@
+{
+  "data_dir": "data\\skin_coat\\combined_clean",
+  "train_size": 4030,
+  "valid_size": 971,
+  "test_size": 554,
+  "num_classes": 11,
+  "classes": [
+    "Bacterial_dermatosis",
+    "Dermatitis",
+    "Flea Allergy",
+    "Fungal_infections",
+    "Hypersensitivity",
+    "Hypersensitivity_allergic_dermatosis",
+    "Scabies",
+    "demodicosis",
+    "hotspot",
+    "mange",
+    "ringworm"
+  ],
+  "class_to_idx": {
+    "Bacterial_dermatosis": 0,
+    "Dermatitis": 1,
+    "Flea Allergy": 2,
+    "Fungal_infections": 3,
+    "Hypersensitivity": 4,
+    "Hypersensitivity_allergic_dermatosis": 5,
+    "Scabies": 6,
+    "demodicosis": 7,
+    "hotspot": 8,
+    "mange": 9,
+    "ringworm": 10
+  },
+  "image_size": 224,
+  "batch_size": 16,
+  "num_workers": 2,
+  "epochs": 50,
+  "patience": 7,
+  "learning_rate": 0.0001,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.05,
+  "seed": 42
+}

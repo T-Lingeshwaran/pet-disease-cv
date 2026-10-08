@@ -1,0 +1,29 @@
+PET HEALTH AI - VLM EXPLANATION
+======================================================================
+
+Image: C:\Users\lingeshwaran\projects\PEP-CV-Project\pet-gait-cv\data\eye_face\combined\test\Cherry_Eye\dog_cherry_eye-16-_jpg.rf.04489f7617abf4e87783c09bdaac4dd6_eye0.jpg
+Modality: eye
+Router confidence: 97.83%
+Prediction: Cherry_Eye
+Prediction confidence: 89.84%
+
+**Observation:**
+The image shows a close-up view of a dog's eye, specifically focusing on the area around the cornea. The eye appears to be inflamed, with a noticeable reddening and swelling around the cornea. There is also a visible discharge from the eye, which is a common symptom of cherry eye (canine ceruminous conjunctivitis).
+
+**Anatomical Region:**
+The anatomical region in focus is the eye, particularly the conjunctiva and cornea.
+
+**Visible Features:**
+- Redness and swelling around the cornea
+- Discharge from the eye
+
+**Grad-CAM Consistency:**
+The Grad-CAM visualization highlights a specific area around the cornea, indicating that this region is highly relevant to the predicted condition of cherry eye. The gradient map shows a concentration of activation in the area around the cornea, suggesting that this is the part of the image that the model focuses on when making its prediction.
+
+**Model Consistency:**
+The image is broadly consistent with the classifier prediction. The visible signs of redness, swelling, and discharge align with the clinical presentation of cherry eye.
+
+**Limitations:**
+1. **Image Quality:** The image quality is good, but it may be affected by
+
+DISCLAIMER: This is an AI screening/explanation result and is not a veterinary diagnosis.

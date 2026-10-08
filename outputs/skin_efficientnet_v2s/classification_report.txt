@@ -1,0 +1,17 @@
+                                      precision    recall  f1-score   support
+
+                Bacterial_dermatosis     0.1538    0.6667    0.2500         6
+                          Dermatitis     0.8889    0.7273    0.8000        66
+                        Flea Allergy     1.0000    0.8250    0.9041        40
+                   Fungal_infections     0.8493    0.9688    0.9051        64
+                    Hypersensitivity     0.6207    0.6923    0.6545        26
+Hypersensitivity_allergic_dermatosis     0.0000    0.0000    0.0000        10
+                             Scabies     0.9630    0.9630    0.9630        27
+                         demodicosis     0.9333    0.9800    0.9561       100
+                             hotspot     0.6667    0.6957    0.6809        23
+                               mange     1.0000    0.6875    0.8148        32
+                            ringworm     0.9490    0.9313    0.9401       160
+
+                            accuracy                         0.8592       554
+                           macro avg     0.7295    0.7398    0.7153       554
+                        weighted avg     0.8819    0.8592    0.8649       554

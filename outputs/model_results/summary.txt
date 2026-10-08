@@ -1,0 +1,36 @@
+PET HEALTH COMPUTER VISION PROJECT
+MODEL PERFORMANCE SUMMARY
+======================================================================
+
+Model : Eye CSF-Net
+Task  : Eye condition classification
+Accuracy       : 0.7320
+Macro F1       : 0.7841
+Macro Recall   : 0.7801
+Loss           : 1.2850
+Source         : outputs\eye_csfnet\test_metrics.json
+----------------------------------------------------------------------
+Model : Skin EfficientNet-B0
+Task  : Skin condition classification
+Accuracy       : 0.8466
+Macro F1       : 0.7363
+Macro Precision: 0.7421
+Macro Recall   : 0.7791
+Loss           : 0.8142
+Source         : outputs\skin_efficientnet\test_metrics.json
+----------------------------------------------------------------------
+Model : Skin EfficientNetV2-S
+Task  : Skin condition classification
+Accuracy       : 0.8592
+Macro F1       : 0.7153
+Macro Recall   : 0.7398
+Loss           : 0.8041
+Source         : outputs\skin_efficientnet_v2s\test_metrics.json
+----------------------------------------------------------------------
+Model : Modality Router
+Task  : Eye vs Skin classification
+Accuracy       : 1.0000
+Macro F1       : 1.0000
+Macro Recall   : 1.0000
+Source         : outputs\modality\test_metrics.json
+----------------------------------------------------------------------

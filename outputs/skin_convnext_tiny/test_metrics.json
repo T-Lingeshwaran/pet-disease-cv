@@ -1,0 +1,14 @@
+{
+  "model": "ConvNeXt-Tiny",
+  "dataset": "skin_coat/combined_clean",
+  "best_epoch": 13,
+  "best_validation_macro_f1": 0.6564008932530921,
+  "test_accuracy": 0.8574007220216606,
+  "test_macro_precision": 0.7262854759289697,
+  "test_macro_recall": 0.7339301107507628,
+  "test_macro_f1": 0.7193712765788548,
+  "num_classes": 11,
+  "image_size": 224,
+  "batch_size": 16,
+  "epochs_requested": 50
+}

@@ -1,0 +1,24 @@
+{
+    "model": "EfficientNetV2-S",
+    "num_classes": 11,
+    "image_size": 384,
+    "batch_size": 8,
+    "best_validation_macro_f1": 0.6646998799150484,
+    "test_loss": 0.8040618115383795,
+    "test_accuracy": 0.8592057761732852,
+    "test_macro_f1": 0.7153230933366791,
+    "test_macro_recall": 0.7397602021020994,
+    "classes": [
+        "Bacterial_dermatosis",
+        "Dermatitis",
+        "Flea Allergy",
+        "Fungal_infections",
+        "Hypersensitivity",
+        "Hypersensitivity_allergic_dermatosis",
+        "Scabies",
+        "demodicosis",
+        "hotspot",
+        "mange",
+        "ringworm"
+    ]
+}

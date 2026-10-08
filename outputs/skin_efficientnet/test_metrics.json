@@ -1,0 +1,22 @@
+{
+  "best_epoch": 8,
+  "best_validation_macro_f1": 0.6497409483286081,
+  "test_loss": 0.8141771128892038,
+  "test_accuracy": 0.8465703971119134,
+  "test_macro_precision": 0.7420723541936076,
+  "test_macro_recall": 0.7790705697647397,
+  "test_macro_f1": 0.7363234889857497,
+  "classes": [
+    "Bacterial_dermatosis",
+    "Dermatitis",
+    "Flea Allergy",
+    "Fungal_infections",
+    "Hypersensitivity",
+    "Hypersensitivity_allergic_dermatosis",
+    "Scabies",
+    "demodicosis",
+    "hotspot",
+    "mange",
+    "ringworm"
+  ]
+}

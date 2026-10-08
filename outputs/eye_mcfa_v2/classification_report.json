@@ -1,0 +1,69 @@
+{
+  "Blepharitis": {
+    "precision": 0.7157894736842105,
+    "recall": 0.723404255319149,
+    "f1-score": 0.7195767195767195,
+    "support": 94.0
+  },
+  "Cataract": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 7.0
+  },
+  "Cherry_Eye": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 9.0
+  },
+  "Conjunctivitis": {
+    "precision": 0.7085714285714285,
+    "recall": 0.5688073394495413,
+    "f1-score": 0.6310432569974554,
+    "support": 218.0
+  },
+  "Corneal_Sequestrum": {
+    "precision": 0.775330396475771,
+    "recall": 0.8148148148148148,
+    "f1-score": 0.7945823927765236,
+    "support": 216.0
+  },
+  "Corneal_Ulcer": {
+    "precision": 0.6713286713286714,
+    "recall": 0.6037735849056604,
+    "f1-score": 0.6357615894039735,
+    "support": 159.0
+  },
+  "Glaucoma": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 5.0
+  },
+  "Health": {
+    "precision": 0.8723404255319149,
+    "recall": 0.9318181818181818,
+    "f1-score": 0.9010989010989011,
+    "support": 308.0
+  },
+  "Non_ulcerative": {
+    "precision": 0.5409836065573771,
+    "recall": 0.6875,
+    "f1-score": 0.6055045871559633,
+    "support": 96.0
+  },
+  "accuracy": 0.7535971223021583,
+  "macro avg": {
+    "precision": 0.8093715557943749,
+    "recall": 0.8144575751452607,
+    "f1-score": 0.8097297163343931,
+    "support": 1112.0
+  },
+  "weighted avg": {
+    "precision": 0.7532200392340382,
+    "recall": 0.7535971223021583,
+    "f1-score": 0.7505309650414134,
+    "support": 1112.0
+  }
+}

@@ -1,0 +1,18 @@
+Combined Dog + Cat Eye Classifier
+EfficientNet-B0
+
+                    precision    recall  f1-score   support
+
+       Blepharitis     0.7176    0.6489    0.6816        94
+          Cataract     1.0000    1.0000    1.0000         7
+        Cherry_Eye     1.0000    1.0000    1.0000         9
+    Conjunctivitis     0.6233    0.6376    0.6304       218
+Corneal_Sequestrum     0.8134    0.7870    0.8000       216
+     Corneal_Ulcer     0.5771    0.6352    0.6048       159
+          Glaucoma     1.0000    1.0000    1.0000         5
+            Health     0.9286    0.8864    0.9070       308
+    Non_ulcerative     0.6571    0.7188    0.6866        96
+
+          accuracy                         0.7500      1112
+         macro avg     0.8130    0.8127    0.8123      1112
+      weighted avg     0.7562    0.7500    0.7524      1112

@@ -1,0 +1,110 @@
+{
+    "model": "EfficientNet-B0",
+    "dataset": "combined dog + cat",
+    "num_classes": 9,
+    "classes": [
+        "Blepharitis",
+        "Cataract",
+        "Cherry_Eye",
+        "Conjunctivitis",
+        "Corneal_Sequestrum",
+        "Corneal_Ulcer",
+        "Glaucoma",
+        "Health",
+        "Non_ulcerative"
+    ],
+    "train_samples": 8890,
+    "validation_samples": 1129,
+    "test_samples": 1112,
+    "best_epoch": 22,
+    "best_validation_macro_f1": 0.8163750992981056,
+    "test_loss": 1.3189169062035424,
+    "test_metrics": {
+        "accuracy": 0.75,
+        "macro_precision": 0.8130244129463889,
+        "macro_recall": 0.8126579609220762,
+        "macro_f1": 0.8122537845405808,
+        "weighted_precision": 0.7561937410763447,
+        "weighted_recall": 0.75,
+        "weighted_f1": 0.7524388821983159,
+        "macro_roc_auc_ovr": null
+    },
+    "per_class_metrics": {
+        "Blepharitis": {
+            "precision": 0.7176470588235294,
+            "recall": 0.648936170212766,
+            "f1": 0.6815642458100558,
+            "support": 94
+        },
+        "Cataract": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 7
+        },
+        "Cherry_Eye": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 9
+        },
+        "Conjunctivitis": {
+            "precision": 0.6233183856502242,
+            "recall": 0.6376146788990825,
+            "f1": 0.6303854875283447,
+            "support": 218
+        },
+        "Corneal_Sequestrum": {
+            "precision": 0.8133971291866029,
+            "recall": 0.7870370370370371,
+            "f1": 0.8,
+            "support": 216
+        },
+        "Corneal_Ulcer": {
+            "precision": 0.5771428571428572,
+            "recall": 0.6352201257861635,
+            "f1": 0.6047904191616766,
+            "support": 159
+        },
+        "Glaucoma": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+        },
+        "Health": {
+            "precision": 0.9285714285714286,
+            "recall": 0.8863636363636364,
+            "f1": 0.9069767441860465,
+            "support": 308
+        },
+        "Non_ulcerative": {
+            "precision": 0.6571428571428571,
+            "recall": 0.71875,
+            "f1": 0.6865671641791045,
+            "support": 96
+        }
+    },
+    "cat_test_samples": 1091,
+    "cat_metrics": {
+        "accuracy": 0.7451879010082493,
+        "macro_precision": 0.7195366194195834,
+        "macro_recall": 0.7189869413831143,
+        "macro_f1": 0.7183806768108713,
+        "weighted_precision": 0.7515008616653487,
+        "weighted_recall": 0.7451879010082493,
+        "weighted_f1": 0.7476737277768353,
+        "macro_roc_auc_ovr": null
+    },
+    "dog_test_samples": 21,
+    "dog_metrics": {
+        "accuracy": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "macro_f1": 1.0,
+        "weighted_precision": 1.0,
+        "weighted_recall": 1.0,
+        "weighted_f1": 1.0,
+        "macro_roc_auc_ovr": null
+    }
+}

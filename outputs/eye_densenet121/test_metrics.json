@@ -1,0 +1,12 @@
+{
+  "model": "DenseNet-121",
+  "dataset": "eye_face/combined",
+  "best_epoch": 16,
+  "best_validation_macro_f1": 0.8042810247315794,
+  "test_accuracy": 0.7473021582733813,
+  "test_macro_precision": 0.7965103205054611,
+  "test_macro_recall": 0.8010732128992882,
+  "test_macro_f1": 0.7974015894496647,
+  "num_classes": 9,
+  "test_samples": 1112
+}

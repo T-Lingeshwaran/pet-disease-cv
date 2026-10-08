@@ -1,0 +1,12 @@
+{
+    "model": "EfficientNet-B0",
+    "task": "eye_vs_skin",
+    "test_accuracy": 1.0,
+    "test_macro_f1": 1.0,
+    "test_macro_recall": 1.0,
+    "best_validation_f1": 1.0,
+    "classes": [
+        "eye",
+        "skin"
+    ]
+}

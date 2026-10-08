@@ -1,0 +1,24 @@
+{
+  "class_names": [
+    "Blepharitis",
+    "Cataract",
+    "Cherry_Eye",
+    "Conjunctivitis",
+    "Corneal_Sequestrum",
+    "Corneal_Ulcer",
+    "Glaucoma",
+    "Health",
+    "Non_ulcerative"
+  ],
+  "class_to_idx": {
+    "Blepharitis": 0,
+    "Cataract": 1,
+    "Cherry_Eye": 2,
+    "Conjunctivitis": 3,
+    "Corneal_Sequestrum": 4,
+    "Corneal_Ulcer": 5,
+    "Glaucoma": 6,
+    "Health": 7,
+    "Non_ulcerative": 8
+  }
+}

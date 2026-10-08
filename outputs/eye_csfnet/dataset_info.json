@@ -1,0 +1,30 @@
+{
+  "train_images": 8890,
+  "validation_images": 1129,
+  "test_images": 1112,
+  "classes": [
+    "Blepharitis",
+    "Cataract",
+    "Cherry_Eye",
+    "Conjunctivitis",
+    "Corneal_Sequestrum",
+    "Corneal_Ulcer",
+    "Glaucoma",
+    "Health",
+    "Non_ulcerative"
+  ],
+  "class_counts": {
+    "Blepharitis": 747,
+    "Cataract": 67,
+    "Cherry_Eye": 67,
+    "Conjunctivitis": 1742,
+    "Corneal_Sequestrum": 1733,
+    "Corneal_Ulcer": 1274,
+    "Glaucoma": 36,
+    "Health": 2461,
+    "Non_ulcerative": 763
+  },
+  "image_size": 224,
+  "architecture": "CSF-Net-inspired",
+  "species": "combined dog + cat"
+}

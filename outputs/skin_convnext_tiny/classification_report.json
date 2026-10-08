@@ -1,0 +1,81 @@
+{
+  "Bacterial_dermatosis": {
+    "precision": 0.15,
+    "recall": 0.5,
+    "f1-score": 0.23076923076923078,
+    "support": 6.0
+  },
+  "Dermatitis": {
+    "precision": 0.8,
+    "recall": 0.6666666666666666,
+    "f1-score": 0.7272727272727273,
+    "support": 66.0
+  },
+  "Flea Allergy": {
+    "precision": 1.0,
+    "recall": 0.9,
+    "f1-score": 0.9473684210526315,
+    "support": 40.0
+  },
+  "Fungal_infections": {
+    "precision": 0.9242424242424242,
+    "recall": 0.953125,
+    "f1-score": 0.9384615384615385,
+    "support": 64.0
+  },
+  "Hypersensitivity": {
+    "precision": 0.6296296296296297,
+    "recall": 0.6538461538461539,
+    "f1-score": 0.6415094339622641,
+    "support": 26.0
+  },
+  "Hypersensitivity_allergic_dermatosis": {
+    "precision": 0.14285714285714285,
+    "recall": 0.1,
+    "f1-score": 0.11764705882352941,
+    "support": 10.0
+  },
+  "Scabies": {
+    "precision": 0.9629629629629629,
+    "recall": 0.9629629629629629,
+    "f1-score": 0.9629629629629629,
+    "support": 27.0
+  },
+  "demodicosis": {
+    "precision": 0.9411764705882353,
+    "recall": 0.96,
+    "f1-score": 0.9504950495049505,
+    "support": 100.0
+  },
+  "hotspot": {
+    "precision": 0.6538461538461539,
+    "recall": 0.7391304347826086,
+    "f1-score": 0.6938775510204082,
+    "support": 23.0
+  },
+  "mange": {
+    "precision": 0.8461538461538461,
+    "recall": 0.6875,
+    "f1-score": 0.7586206896551724,
+    "support": 32.0
+  },
+  "ringworm": {
+    "precision": 0.9382716049382716,
+    "recall": 0.95,
+    "f1-score": 0.9440993788819876,
+    "support": 160.0
+  },
+  "accuracy": 0.8574007220216606,
+  "macro avg": {
+    "precision": 0.7262854759289697,
+    "recall": 0.7339301107507628,
+    "f1-score": 0.7193712765788548,
+    "support": 554.0
+  },
+  "weighted avg": {
+    "precision": 0.8718536920844558,
+    "recall": 0.8574007220216606,
+    "f1-score": 0.8619802488692442,
+    "support": 554.0
+  }
+}
