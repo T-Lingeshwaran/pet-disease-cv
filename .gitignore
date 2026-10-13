@@ -29,3 +29,28 @@ data/injury_triage/
 # OS
 .DS_Store
 Thumbs.db
+# Deployment virtual environment
+.venv-deploy/
+
+# Generated deployment and experiment artifacts
+outputs/layercam/
+outputs/model_comparison/
+outputs/qualitative_all_models_layercam/
+outputs/qualitative_layercam/
+
+# Temporary deployment scaffold
+pep_cv_netlify_scaffold/
+# Python cache files
+__pycache__/
+
+# Deployment virtual environment
+.venv-deploy/
+
+# Generated experiment artifacts
+outputs/layercam/
+outputs/model_comparison/
+outputs/qualitative_all_models_layercam/
+outputs/qualitative_layercam/
+
+# Temporary scaffold
+pep_cv_netlify_scaffold/

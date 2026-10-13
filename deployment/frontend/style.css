@@ -1,0 +1,13 @@
+:root{color-scheme:light;--ink:#172033;--muted:#667085;--line:#e4e7ec;--accent:#3157d5;--bg:#f4f7fb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+.shell{width:min(860px,calc(100% - 28px));margin:42px auto}header{margin-bottom:24px}.eyebrow{color:var(--accent);font-size:.75rem;font-weight:800;letter-spacing:.12em}
+h1{font-size:clamp(2rem,5vw,3rem);margin:.3rem 0;line-height:1.12}h2{margin:.3rem 0;overflow-wrap:anywhere}h3{margin:24px 0 10px}
+.subtitle,.hint{color:var(--muted)}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:24px;margin:18px 0;box-shadow:0 8px 28px #1720330a}
+label{display:block;font-weight:700;margin:8px 0}input[type=url]{width:100%;padding:12px;border:1px solid #cfd5e1;border-radius:10px;font:inherit}
+input[type=file]{display:block;max-width:100%;margin:10px 0 18px}.hint{font-size:.9rem}button{width:100%;border:0;border-radius:11px;padding:14px 18px;background:var(--accent);color:white;font-weight:750;font-size:1rem;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}#status{min-height:1.5em;margin-bottom:0;color:var(--muted);overflow-wrap:anywhere}.preview-wrap{margin:14px 0}
+.preview-wrap img{display:block;max-width:100%;max-height:320px;border-radius:12px}.hidden{display:none!important}.result-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.badge{background:#edf2ff;color:#2444ae;padding:6px 12px;border-radius:999px;text-transform:capitalize;font-weight:700}
+.top-row{margin:12px 0}.top-row-head{display:flex;justify-content:space-between;gap:12px;font-size:.92rem}.bar{height:8px;background:#eef0f5;border-radius:99px;overflow:hidden;margin-top:5px}
+.bar span{display:block;height:100%;background:var(--accent);border-radius:99px}.heatmap{display:block;max-width:100%;max-height:520px;border-radius:12px;border:1px solid var(--line)}
+.notice{color:var(--muted);font-size:.9rem;margin-top:20px}footer{text-align:center;color:var(--muted);font-size:.85rem;padding:20px 8px 40px}code{background:#f1f3f8;padding:2px 5px;border-radius:4px}

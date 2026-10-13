@@ -1,0 +1,9 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+numpy<2
+Pillow>=10.0,<13
+opencv-python-headless>=4.8,<5

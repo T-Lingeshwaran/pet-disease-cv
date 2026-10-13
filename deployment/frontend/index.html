@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEP-CV | Pet Eye &amp; Skin Screening</title><link rel="stylesheet" href="style.css">
+</head>
+<body><main class="shell">
+<header><div class="eyebrow">COMPUTER VISION • PET HEALTH</div><h1>PEP-CV Screening</h1>
+<p class="subtitle">AI-assisted pet eye and skin image screening with visual explanations.</p></header>
+<section class="card">
+<label for="apiUrl">Backend API URL</label><input id="apiUrl" type="url" placeholder="https://your-backend.onrender.com">
+<p class="hint">http://127.0.0.1:8000 <code>/analyze</code>.</p>
+<label for="imageInput">Choose an eye or skin image</label><input id="imageInput" type="file" accept="image/*">
+<div id="previewWrap" class="preview-wrap hidden"><img id="preview" alt="Selected image preview"></div>
+<button id="analyzeBtn" type="button">Analyze image</button><p id="status" role="status" aria-live="polite"></p>
+</section>
+<section id="results" class="card hidden"><div class="result-heading"><div><div class="eyebrow">SCREENING RESULT</div><h2 id="predictionTitle">—</h2></div><span id="modalityBadge" class="badge">—</span></div>
+<p id="modelName" class="hint"></p><p id="confidenceText"></p><h3>Top predictions</h3><div id="topK"></div>
+<h3>LayerCAM explanation</h3><p class="hint">Highlighted regions influenced the model; they do not prove a diagnosis.</p>
+<img id="heatmap" class="heatmap" alt="LayerCAM heatmap"><p id="notice" class="notice"></p></section>
+<footer>PEP-CV is a research prototype and is not a substitute for veterinary advice.</footer>
+</main><script src="app.js"></script></body></html>
