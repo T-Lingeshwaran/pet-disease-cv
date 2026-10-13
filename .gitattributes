@@ -1,0 +1,3 @@
+deployment/backend/outputs/modality/best_model.pth filter=lfs diff=lfs merge=lfs -text
+deployment/backend/outputs/eye_mcfa_v2/best_model.pth filter=lfs diff=lfs merge=lfs -text
+deployment/backend/outputs/skin_cstf/best_model.pth filter=lfs diff=lfs merge=lfs -text
